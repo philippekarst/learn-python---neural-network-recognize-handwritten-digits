@@ -3,8 +3,8 @@ import pandas as pd
 
 
 #Load the data
-df_train = pd.read_csv(r"C:\Users\Philippe\Documents\python codes\neural network hand written digits\mnist_train.csv")
-df_test = pd.read_csv(r"C:\Users\Philippe\Documents\python codes\neural network hand written digits\mnist_test.csv")
+df_train = pd.read_csv(r".\mnist_train.csv")
+df_test = pd.read_csv(r"C:.\mnist_test.csv")
 df_train = pd.DataFrame(df_train).to_numpy().transpose() #we want every column to represent a picture together with its label
 df_test = pd.DataFrame(df_test).to_numpy().transpose()
 print(f"Training data shape: {df_train.shape}")
@@ -15,24 +15,25 @@ print(f"Testing data shape: {df_test.shape}")
 df_train = df_train[:, np.random.permutation(df_train.shape[1])] #shuffle columns of the training data
 X_train = df_train[1:,:]/255
 Y_train = df_train[0,:]
-print(X_train.shape)
 
 X_trainsamples = []
 Y_trainsamples = []
 for i in range(60):
     X_trainsamples.append(X_train[:,1000*i:1000*i+1000])
     Y_trainsamples.append(Y_train[1000*i:1000*i+1000])
-X_test = df_test[1:,:]
+X_test = df_test[1:,:]/255
 Y_test = df_test[0,:]
+print(Y_test.shape)
 
 
-#initialize the weights ans biases of the network
-def init():
-    W_1 = np.random.rand(10,784)-0.5
+#initialize the network
+def init(n :int,m : int):
+    W_1 = np.random.rand(n,784)-0.5
     W_2 = np.random.rand(10,10)-0.5
-    B_1 = np.random.rand(10,1)-0.5
-    B_2 = np.random.rand(10,1)-0.5
+    B_1 = np.zeros([10,1])
+    B_2 = np.zeros([10,1])
     return W_1, W_2, B_1, B_2
+W_1, W_2, B_1, B_2= init()
 
 
 #define Sigmoid function
@@ -119,9 +120,29 @@ def stochastic_gradient_descent(X_trainsamples, Y_trainsamples, iterations, alph
     for i in range(iterations):
         for j in range(len(X_trainsamples)):
             W_1, W_2, B_1, B_2, A_2 = gradient_descent(X_trainsamples[j],Y_trainsamples[j], 1, alpha, W_1, W_2, B_1, B_2)
-            if i % 10 == 0 and j == 2:
+            if i % 10 == 0 and j == 0:
                 a = get_accuracy(get_predictions(A_2),Y_trainsamples[j])
                 print(f"Iterations: {i}. Accuracy: {a*100}%.")
+        if get_accuracy(get_predictions(A_2), Y_trainsamples[59]) >= 0.9:
+            print("The network has finished training.")
+            break
+    return W_1, W_2, B_1, B_2
 
 
-stochastic_gradient_descent(X_trainsamples,Y_trainsamples,50000,0.5)
+#save model
+W_1, W_2, B_1, B_2 = stochastic_gradient_descent(X_trainsamples,Y_trainsamples,50000,0.5)
+print(W_1.shape)
+np.savetxt("W_1.csv",W_1,delimiter=",")
+np.savetxt("W_2.csv",W_2,delimiter=",")
+np.savetxt("B_1.csv",B_1,delimiter=",")
+np.savetxt("B_2.csv",B_2,delimiter=",")
+
+#test the model
+def test_model(W_1, W_2, B_1, B_2, X, Y):
+    Z_1, Z_2, A_1, A_2 = forward_prop(W_1, W_2, B_1, B_2, X)
+    print(A_2.shape)
+    print(f"Accuracy on test data: {get_accuracy(get_predictions(A_2), Y)}")
+
+
+
+test_model(W_1, W_2, B_1, B_2, X_test, Y_test)
