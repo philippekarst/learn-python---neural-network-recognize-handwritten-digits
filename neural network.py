@@ -15,7 +15,6 @@ print(f"Testing data shape: {df_test.shape}")
 df_train = df_train[:, np.random.permutation(df_train.shape[1])] #shuffle columns of the training data
 X_train = df_train[1:,:]/255
 Y_train = df_train[0,:]
-
 X_trainsamples = []
 Y_trainsamples = []
 for i in range(60):
@@ -29,8 +28,9 @@ Y_test = df_test[0,:]
 def init(n :int,m : int):
     W = []
     W.append(np.random.rand(n,784)-0.5)    #weights for input layer
-    for i in range(m):                     #weights for hidden layers
+    for i in range(m-1):                     #weights for hidden layers
         W.append(np.random.rand(n,n)-0.5)
+    W.append(np.random.rand(10,n)-0.5)
     B = []
     for i in range(m):                     #weights for hidden layers
         B.append(np.zeros([n,1]))
@@ -71,11 +71,11 @@ def back_prop(m, Z, A, W, Y):
     dA=[2*(A[m+1]-Y)]
     #compute differential of the activations with respect to the cost
     for i in range(m):
-        dA.append(np.dot(dA[i].transpose(),W[m-i]).transpose()*sigmoid(Z[m-i])*(1-sigmoid(Z[m-i])))
+        dA.append(np.dot((dA[i]*sigmoid(Z[m-i])*(1-sigmoid(Z[m-i]))).transpose(),W[m-i]).transpose())
     #compute differentials of weights and biases with respect to the cost
     for i in range(m+1):
-        dW.append(1/(A[0].shape[1])*np.dot((sigmoid(Z[m-i])*(1-sigmoid(Z[m-i]))*dA[0]),A[m-i].transpose()))
-        dB.append(1/(A[0].shape[1])*np.diag(np.dot(sigmoid(Z[m-i])*(1-sigmoid(Z[m-i])),(dA[0]).transpose())))
+        dW.append(1/(A[0].shape[1])*np.dot((sigmoid(Z[m-i])*(1-sigmoid(Z[m-i]))*dA[i]),A[m-i].transpose()))
+        dB.append(1/(A[0].shape[1])*np.diag(np.dot(sigmoid(Z[m-i])*(1-sigmoid(Z[m-i])),(dA[i]).transpose())))
     dW.reverse()
     dB.reverse()
     return dW, dB
@@ -85,7 +85,7 @@ def back_prop(m, Z, A, W, Y):
 def update_params(m, W, B, dW, dB, alpha):
     for i in range(m+1):
         W[i] = W[i]-alpha*dW[i]
-        B[i] = B[i]-alpha*dB[i]
+        B[i] = B[i]-alpha*dB[i][:,np.newaxis]
     return W, B
 
 
@@ -124,17 +124,17 @@ def stochastic_gradient_descent(n, m, X_trainsamples, Y_trainsamples, iterations
             if i % 10 == 0 and j == 0:
                 a = get_accuracy(get_predictions(m, A),Y_trainsamples[j])
                 print(f"Iterations: {i}. Accuracy: {a*100}%.")
-        if get_accuracy(get_predictions(A[m+1]), Y_trainsamples[59]) >= 0.9:
+        if get_accuracy(get_predictions(m,A), Y_trainsamples[59]) >= 0.97:
             print("The network has finished training.")
             break
     return W, B
 
 
 #save model
-W, B = stochastic_gradient_descent(10, 1, X_trainsamples,Y_trainsamples,50000,0.5)
-for i in W:
+W, B = stochastic_gradient_descent(20, 3, X_trainsamples,Y_trainsamples,50000,1)
+for i in range(len(W)):
     np.savetxt(f"W_{i}.csv",W[i],delimiter=",")
-for i in B:
+for i in range(len(B)):
     np.savetxt(f"B_{i}.csv",B[i],delimiter=",")
 
 
@@ -142,8 +142,8 @@ for i in B:
 def test_model(m, W, B, X, Y):
     Z, A = forward_prop(m, W, B, X)
     print(A[m+1].shape)
-    print(f"Accuracy on test data: {get_accuracy(get_predictions(A[m+1]), Y)}")
+    print(f"Accuracy on test data: {get_accuracy(get_predictions(m, A), Y)}")
 
 
 
-#test_model(m, W, B, X_test, Y_test)
+test_model(2, W, B, X_test, Y_test)
