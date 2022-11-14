@@ -114,7 +114,18 @@ def gradient_descent(m, X, Y, iterations, alpha, W, B):
         #    print(f"Iterations: {i}. Accuracy: {a*100}%.")
     return W, B, A
 
-
+#def stochastic_gradient_descent(n, m, X_trainsamples, Y_trainsamples, iterations, alpha):
+#    W, B, m = init(n,m)
+#    i=0
+#    while i == 0 or get_accuracy(get_predictions(m,A), Y_trainsamples[59]) <= 0.97:
+#        for j in range(len(X_trainsamples)):
+ #           W, B, A = gradient_descent(m, X_trainsamples[j],Y_trainsamples[j], 1, alpha, W, B)
+ #           if i % 10 == 0 and j == 0:
+ #               a = get_accuracy(get_predictions(m, A),Y_trainsamples[j])
+ #               print(f"Iterations: {i}. Accuracy: {a*100}%.")
+ #       i = i+1
+ #   print("The network has finished training.")
+ #   return W, B
 #stochastic gradient descent
 def stochastic_gradient_descent(n, m, X_trainsamples, Y_trainsamples, iterations, alpha):
     W, B, m = init(n,m)
@@ -124,14 +135,14 @@ def stochastic_gradient_descent(n, m, X_trainsamples, Y_trainsamples, iterations
             if i % 10 == 0 and j == 0:
                 a = get_accuracy(get_predictions(m, A),Y_trainsamples[j])
                 print(f"Iterations: {i}. Accuracy: {a*100}%.")
-        if get_accuracy(get_predictions(m,A), Y_trainsamples[59]) >= 0.97:
+        if get_accuracy(get_predictions(m,A), Y_trainsamples[59]) >= 0.92:
             print("The network has finished training.")
             break
     return W, B
 
 
 #save model
-W, B = stochastic_gradient_descent(20, 3, X_trainsamples,Y_trainsamples,50000,1)
+W, B = stochastic_gradient_descent(10, 2, X_trainsamples,Y_trainsamples,50000,1)
 for i in range(len(W)):
     np.savetxt(f"W_{i}.csv",W[i],delimiter=",")
 for i in range(len(B)):
@@ -141,8 +152,7 @@ for i in range(len(B)):
 #test the model
 def test_model(m, W, B, X, Y):
     Z, A = forward_prop(m, W, B, X)
-    print(A[m+1].shape)
-    print(f"Accuracy on test data: {get_accuracy(get_predictions(m, A), Y)}")
+    print(f"Accuracy on test data: {get_accuracy(get_predictions(m, A), Y)*100}%")
 
 
 
